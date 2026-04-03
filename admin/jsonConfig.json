@@ -1,0 +1,69 @@
+{
+  "i18n": true,
+  "type": "panel",
+  "items": {
+    "baseUrl": {
+      "type": "text",
+      "label": "GraphQL URL",
+      "newLine": true,
+      "sm": 12,
+      "md": 12,
+      "lg": 12
+    },
+    "authUrl": {
+      "type": "text",
+      "label": "OIDC Token URL",
+      "newLine": true,
+      "sm": 12,
+      "md": 12,
+      "lg": 12
+    },
+    "username": {
+      "type": "text",
+      "label": "E-Mail",
+      "newLine": true,
+      "sm": 6,
+      "md": 6,
+      "lg": 6
+    },
+    "password": {
+      "type": "password",
+      "label": "Passwort",
+      "sm": 6,
+      "md": 6,
+      "lg": 6
+    },
+    "pollIntervalSec": {
+      "type": "number",
+      "label": "Polling Intervall (Sekunden)",
+      "newLine": true,
+      "min": 3,
+      "max": 300,
+      "sm": 4,
+      "md": 4,
+      "lg": 4
+    },
+    "verifySsl": {
+      "type": "checkbox",
+      "label": "SSL verifizieren",
+      "sm": 4,
+      "md": 4,
+      "lg": 4
+    },
+    "appVersion": {
+      "type": "text",
+      "label": "App-Version Header",
+      "sm": 4,
+      "md": 4,
+      "lg": 4
+    },
+    "oidcClientIds": {
+      "type": "text",
+      "label": "OIDC Client IDs (comma separated)",
+      "newLine": true,
+      "sm": 12,
+      "md": 12,
+      "lg": 12
+    }
+  }
+}

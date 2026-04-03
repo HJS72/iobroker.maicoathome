@@ -1,0 +1,50 @@
+{
+  "common": {
+    "name": "maicoathome",
+    "version": "0.1.0",
+    "news": {
+      "0.1.0": {
+        "en": "Initial adapter version"
+      }
+    },
+    "titleLang": {
+      "en": "MAICO@HOME",
+      "de": "MAICO@HOME"
+    },
+    "desc": {
+      "en": "Read and control MAICO@HOME cloud devices",
+      "de": "MAICO@HOME Cloud Geraete lesen und steuern"
+    },
+    "authors": [
+      "local"
+    ],
+    "license": "MIT",
+    "platform": "Javascript/Node.js",
+    "main": "main.js",
+    "icon": "maicoathome.png",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/SSPANNI/iobroker.maicoathome/main/admin/maicoathome.png",
+    "readme": "https://github.com/SSPANNI/iobroker.maicoathome/blob/main/README.md",
+    "loglevel": "info",
+    "mode": "daemon",
+    "type": "climate-control",
+    "compact": true,
+    "connectionType": "cloud",
+    "dataSource": "push",
+    "materialize": true,
+    "adminUI": {
+      "config": "json"
+    }
+  },
+  "native": {
+    "baseUrl": "https://airhome-service.cloud.air-home.de/graphql",
+    "authUrl": "https://auth.cloud.maico-ventilatoren.com/auth/realms/maico/protocol/openid-connect/token",
+    "username": "",
+    "password": "",
+    "pollIntervalSec": 10,
+    "verifySsl": true,
+    "appVersion": "1.4.4",
+    "oidcClientIds": "airhome-app,myaccount"
+  },
+  "objects": []
+}

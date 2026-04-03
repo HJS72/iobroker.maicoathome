@@ -1,0 +1,36 @@
+{
+  "name": "iobroker.maicoathome",
+  "version": "0.1.0",
+  "description": "ioBroker adapter for MAICO@HOME cloud devices",
+  "author": "local",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SSPANNI/iobroker.maicoathome.git"
+  },
+  "main": "main.js",
+  "type": "commonjs",
+  "keywords": [
+    "iobroker",
+    "maico",
+    "airathome",
+    "ws75"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@iobroker/adapter-core": "^3.2.3"
+  },
+  "devDependencies": {
+    "@iobroker/testing": "^5.0.4",
+    "eslint": "^9.23.0"
+  },
+  "scripts": {
+    "start": "node main.js",
+    "lint": "eslint .",
+    "test": "npm run test:package && npm run test:integration",
+    "test:package": "mocha test/package --exit",
+    "test:integration": "mocha test/integration --exit"
+  }
+}
