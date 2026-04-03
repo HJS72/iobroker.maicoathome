@@ -23,14 +23,14 @@
     "main": "main.js",
     "icon": "maicoathome.png",
     "enabled": true,
-    "extIcon": "https://raw.githubusercontent.com/HJS72/iobroker.maicoathome/main/admin/maicoathome.png",
-    "readme": "https://github.com/HJS72/iobroker.maicoathome/blob/main/README.md",
+    "extIcon": "https://raw.githubusercontent.com/SSPANNI/iobroker.maicoathome/main/admin/maicoathome.png",
+    "readme": "https://github.com/SSPANNI/iobroker.maicoathome/blob/main/README.md",
     "loglevel": "info",
     "mode": "daemon",
     "type": "climate-control",
     "compact": true,
     "connectionType": "cloud",
-    "dataSource": "poll",
+    "dataSource": "push",
     "materialize": true,
     "adminUI": {
       "config": "json"
@@ -46,19 +46,5 @@
     "appVersion": "1.4.4",
     "oidcClientIds": "airhome-app,myaccount"
   },
-  "objects": [
-    {
-      "_id": "info.connection",
-      "type": "state",
-      "common": {
-        "name": "If connected to MAICO cloud service",
-        "type": "boolean",
-        "role": "indicator.connected",
-        "read": true,
-        "write": false,
-        "def": false
-      },
-      "native": {}
-    }
-  ]
+  "objects": []
 }

@@ -69,12 +69,12 @@ mutation RequestData($uuid: String!) {
 const STATUS_STATES = {
   operating_mode: { type: "number", role: "value", name: "Betriebsart" },
   fan_level_current: { type: "number", role: "value", name: "Lueftungsstufe" },
-  room_temperature: { type: "number", role: "value.temperature", unit: "degC", name: "Temp Raum" },
-  inlet_air_temperature: { type: "number", role: "value.temperature", unit: "degC", name: "Temp Lufteintritt" },
-  target_room_temperature: { type: "number", role: "value.temperature", unit: "degC", name: "Solltemperatur" },
-  supply_air_temperature: { type: "number", role: "value.temperature", unit: "degC", name: "Temp Zuluft" },
-  extract_air_temperature: { type: "number", role: "value.temperature", unit: "degC", name: "Temp Abluft" },
-  exhaust_air_temperature: { type: "number", role: "value.temperature", unit: "degC", name: "Temp Fortluft" },
+  room_temperature: { type: "number", role: "value.temperature", unit: "°C", name: "Temp Raum" },
+  inlet_air_temperature: { type: "number", role: "value.temperature", unit: "°C", name: "Temp Lufteintritt" },
+  target_room_temperature: { type: "number", role: "value.temperature", unit: "°C", name: "Solltemperatur" },
+  supply_air_temperature: { type: "number", role: "value.temperature", unit: "°C", name: "Temp Zuluft" },
+  extract_air_temperature: { type: "number", role: "value.temperature", unit: "°C", name: "Temp Abluft" },
+  exhaust_air_temperature: { type: "number", role: "value.temperature", unit: "°C", name: "Temp Fortluft" },
   extract_air_humidity: { type: "number", role: "value.humidity", unit: "%", name: "Feuchte Abluft" },
   humidity_min: { type: "number", role: "value.humidity", unit: "%", name: "Feuchte Min" },
   humidity_max: { type: "number", role: "value.humidity", unit: "%", name: "Feuchte Max" },
@@ -102,12 +102,11 @@ const REMOTE_STATES = {
   target_room_temperature: {
     type: "number",
     role: "level.temperature",
-    unit: "degC",
+    unit: "°C",
     name: "Solltemperatur",
     min: 10,
     max: 35
   },
-  device_filter_interval: { type: "number", role: "level", unit: "months", name: "Geraetefilter Intervall", min: 1, max: 24 },
   device_filter_changed: { type: "boolean", role: "button", name: "Geraetefilter gewechselt" },
   outside_filter_changed: { type: "boolean", role: "button", name: "Aussenfilter gewechselt" },
   room_filter_changed: { type: "boolean", role: "button", name: "Raumfilter gewechselt" }
@@ -118,7 +117,6 @@ const CLOUD_PARAM_MAP = {
   operating_mode: 530,
   fan_level: 105,
   target_room_temperature: 610,
-  device_filter_interval: 150,
   device_filter_changed: 157,
   outside_filter_changed: 158,
   room_filter_changed: 159
@@ -153,6 +151,7 @@ class MaicoAtHome extends utils.Adapter {
 
     this.token = null;
     this.deviceBySlug = new Map();
+    this.unsupportedRemoteByDevice = new Map();
     this.pollTimer = null;
   }
 
@@ -244,6 +243,11 @@ class MaicoAtHome extends utils.Adapter {
       await this.requestDeviceData(device.uuid);
       await this.pollDevice(device);
     } catch (err) {
+      if (String(err.message || err).includes("PARAMETER_UNKNOWN")) {
+        await this.disableUnsupportedRemoteState(device, datapoint);
+        await this.setStateAsync(local, { val: state.val, ack: true });
+        return;
+      }
       this.log.error(`Write failed for ${local}: ${err.message || err}`);
     }
   }
@@ -518,12 +522,6 @@ class MaicoAtHome extends utils.Adapter {
         ack: true
       });
     }
-    if (status.device_filter_interval !== undefined) {
-      await this.setStateChangedAsync(`${device.slug}.Remote.device_filter_interval`, {
-        val: status.device_filter_interval,
-        ack: true
-      });
-    }
   }
 
   /**
@@ -577,6 +575,30 @@ class MaicoAtHome extends utils.Adapter {
     } catch (err) {
       this.log.debug(`requestDeviceData failed: ${err.message || err}`);
     }
+  }
+
+  /**
+   * Marks one Remote datapoint as unsupported for the given device and disables
+   * further writes to avoid repeated PARAMETER_UNKNOWN errors.
+   * @param {{uuid: string, slug: string}} device Device descriptor
+   * @param {string} key Writable ioBroker state key
+   */
+  async disableUnsupportedRemoteState(device, key) {
+    const known = this.unsupportedRemoteByDevice.get(device.uuid) || new Set();
+    if (known.has(key)) {
+      return;
+    }
+    known.add(key);
+    this.unsupportedRemoteByDevice.set(device.uuid, known);
+
+    const id = `${device.slug}.Remote.${key}`;
+    const obj = await this.getObjectAsync(id);
+    if (obj && obj.common && obj.common.write !== false) {
+      obj.common.write = false;
+      await this.setObjectAsync(id, obj);
+    }
+
+    this.log.warn(`Remote state ${id} is not supported by this device (PARAMETER_UNKNOWN). Writes were disabled.`);
   }
 
   /**
