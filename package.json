@@ -1,0 +1,25 @@
+{
+  "name": "iobroker.maicoathome",
+  "version": "0.1.0",
+  "description": "ioBroker adapter for MAICO@HOME cloud devices",
+  "author": "local",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HJS72/iobroker.MaicoAtHome.git"
+  },
+  "main": "main.js",
+  "files": [
+    "admin/",
+    "io-package.json",
+    "main.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@iobroker/adapter-core": "^3.2.3"
+  }
+}

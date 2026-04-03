@@ -1,0 +1,77 @@
+{
+  "i18n": true,
+  "type": "panel",
+  "items": {
+    "baseUrl": {
+      "type": "text",
+      "label": "GraphQL URL",
+      "help": "Standard nur aendern, wenn MAICO einen anderen GraphQL-Endpunkt verwendet.",
+      "newLine": true,
+      "sm": 12,
+      "md": 12,
+      "lg": 12
+    },
+    "authUrl": {
+      "type": "text",
+      "label": "OIDC Token URL",
+      "help": "OIDC-Token-Endpunkt fuer Login mit Benutzername und Passwort.",
+      "newLine": true,
+      "sm": 12,
+      "md": 12,
+      "lg": 12
+    },
+    "username": {
+      "type": "text",
+      "label": "E-Mail",
+      "help": "MAICO@HOME Konto-E-Mail.",
+      "newLine": true,
+      "sm": 6,
+      "md": 6,
+      "lg": 6
+    },
+    "password": {
+      "type": "password",
+      "label": "Passwort",
+      "help": "MAICO@HOME Konto-Passwort.",
+      "sm": 6,
+      "md": 6,
+      "lg": 6
+    },
+    "pollIntervalSec": {
+      "type": "number",
+      "label": "Polling Intervall (Sekunden)",
+      "help": "Wie oft Status- und Telemetriedaten aus der Cloud gelesen werden.",
+      "newLine": true,
+      "min": 3,
+      "max": 300,
+      "sm": 4,
+      "md": 4,
+      "lg": 4
+    },
+    "verifySsl": {
+      "type": "checkbox",
+      "label": "SSL verifizieren",
+      "help": "Nur deaktivieren, wenn es ein Zertifikatsproblem gibt.",
+      "sm": 4,
+      "md": 4,
+      "lg": 4
+    },
+    "appVersion": {
+      "type": "text",
+      "label": "App-Version Header",
+      "help": "Wird als App-Version HTTP-Header an die Cloud gesendet.",
+      "sm": 4,
+      "md": 4,
+      "lg": 4
+    },
+    "oidcClientIds": {
+      "type": "text",
+      "label": "OIDC Client IDs (comma separated)",
+      "help": "Mehrere Client-IDs probieren, getrennt durch Komma, z. B. airhome-app,myaccount.",
+      "newLine": true,
+      "sm": 12,
+      "md": 12,
+      "lg": 12
+    }
+  }
+}
