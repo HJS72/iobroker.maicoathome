@@ -46,5 +46,19 @@
     "appVersion": "1.4.4",
     "oidcClientIds": "airhome-app,myaccount"
   },
-  "objects": []
+  "objects": [
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "name": "If connected to MAICO cloud service",
+        "type": "boolean",
+        "role": "indicator.connected",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    }
+  ]
 }

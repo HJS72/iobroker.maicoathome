@@ -89,6 +89,12 @@ const STATUS_STATES = {
   cloud_error: { type: "string", role: "text", name: "Cloud Fehler" }
 };
 
+// Device-level states placed directly below the device object.
+const DEVICE_STATES = {
+  connected: { type: "boolean", role: "indicator.connected", name: "Connected" },
+  lastupdate: { type: "number", role: "value.time", name: "Last Update" }
+};
+
 // Writable ioBroker states mapped to cloud parameter writes.
 const REMOTE_STATES = {
   operating_mode: { type: "number", role: "level", name: "Betriebsart", min: 0, max: 5 },
@@ -162,6 +168,8 @@ class MaicoAtHome extends utils.Adapter {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
       this.log.warn("SSL verification is disabled.");
     }
+
+    await this.ensureInfoObjects();
 
     await this.setStateAsync("info.connection", false, true);
 
@@ -385,6 +393,20 @@ class MaicoAtHome extends utils.Adapter {
         }
       });
 
+      for (const [id, meta] of Object.entries(DEVICE_STATES)) {
+        await this.setObjectNotExistsAsync(`${d.slug}.${id}`, {
+          type: "state",
+          common: {
+            name: meta.name,
+            type: meta.type,
+            role: meta.role,
+            read: true,
+            write: false
+          },
+          native: {}
+        });
+      }
+
       await this.setObjectNotExistsAsync(`${d.slug}.Status`, {
         type: "channel",
         common: { name: "Status" },
@@ -463,6 +485,13 @@ class MaicoAtHome extends utils.Adapter {
     status.updated_at = telemetryNode.updatedAt ? String(telemetryNode.updatedAt) : "";
     status.cloud_error = telemetryNode.error ? String(telemetryNode.error) : "";
 
+    await this.setStateChangedAsync(`${device.slug}.connected`, { val: Boolean(telemetryNode.online), ack: true });
+
+    const lastUpdateTs = parseTimestamp(telemetryNode.updatedAt);
+    if (lastUpdateTs !== undefined) {
+      await this.setStateChangedAsync(`${device.slug}.lastupdate`, { val: lastUpdateTs, ack: true });
+    }
+
     for (const key of Object.keys(STATUS_STATES)) {
       const v = status[key];
       if (
@@ -540,6 +569,24 @@ class MaicoAtHome extends utils.Adapter {
     } catch (err) {
       this.log.debug(`requestDeviceData failed: ${err.message || err}`);
     }
+  }
+
+  /**
+   * Ensures the standard ioBroker info states exist before they are written.
+   */
+  async ensureInfoObjects() {
+    await this.setObjectNotExistsAsync("info.connection", {
+      type: "state",
+      common: {
+        name: "If connected to MAICO cloud service",
+        type: "boolean",
+        role: "indicator.connected",
+        read: true,
+        write: false,
+        def: false
+      },
+      native: {}
+    });
   }
 }
 
@@ -656,6 +703,19 @@ function setNum(out, key, value, scale) {
   if (n !== undefined) {
     out[key] = n / scale;
   }
+}
+
+/**
+ * Converts an ISO date/time string into a Unix timestamp in milliseconds.
+ * @param {*} value Raw timestamp value
+ * @returns {number | undefined}
+ */
+function parseTimestamp(value) {
+  if (!value) {
+    return undefined;
+  }
+  const ts = Date.parse(String(value));
+  return Number.isFinite(ts) ? ts : undefined;
 }
 
 if (require.main !== module) {
