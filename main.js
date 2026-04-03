@@ -104,15 +104,14 @@ const STATUS_STATES = {
   device_filter_remaining: { type: "number", role: "value", unit: "days", name: "Geraetefilter Rest" },
   outside_filter_remaining: { type: "number", role: "value", unit: "days", name: "Aussenfilter Rest" },
   room_filter_remaining: { type: "number", role: "value", unit: "days", name: "Raumfilter Rest" },
-  online: { type: "boolean", role: "indicator.connected", name: "Online" },
-  updated_at: { type: "string", role: "text", name: "Telemetry Updated At" },
-  cloud_error: { type: "string", role: "text", name: "Cloud Fehler" }
+  online: { type: "boolean", role: "indicator.connected", name: "Online" }
 };
 
 // Device-level states placed directly below the device object.
 const DEVICE_STATES = {
   connected: { type: "boolean", role: "indicator.connected", name: "Connected" },
-  lastupdate: { type: "number", role: "value.time", name: "Last Update" }
+  lastupdate: { type: "number", role: "value.time", name: "Last Update" },
+  cloud_error: { type: "string", role: "text", name: "Cloud Fehler" }
 };
 
 const LEGACY_FILTER_CHANGED_STATES = [
@@ -125,6 +124,14 @@ const LEGACY_FILTER_INTERVAL_STATES = [
   "device_filter_interval",
   "outside_filter_interval",
   "room_filter_interval"
+];
+
+const LEGACY_STATUS_ROOT_MOVES = [
+  "cloud_error"
+];
+
+const LEGACY_STATUS_REMOVED_STATES = [
+  "updated_at"
 ];
 
 // Writable ioBroker states mapped to cloud parameter writes.
@@ -551,6 +558,24 @@ class MaicoAtHome extends utils.Adapter {
           await this.delObjectAsync(fullId);
         }
       }
+
+      // Remove legacy status states that were moved to device root.
+      for (const id of LEGACY_STATUS_ROOT_MOVES) {
+        const fullId = `${d.slug}.Status.${id}`;
+        const obj = await this.getObjectAsync(fullId);
+        if (obj) {
+          await this.delObjectAsync(fullId);
+        }
+      }
+
+      // Remove legacy status states that are no longer exposed.
+      for (const id of LEGACY_STATUS_REMOVED_STATES) {
+        const fullId = `${d.slug}.Status.${id}`;
+        const obj = await this.getObjectAsync(fullId);
+        if (obj) {
+          await this.delObjectAsync(fullId);
+        }
+      }
     }
   }
 
@@ -583,10 +608,10 @@ class MaicoAtHome extends utils.Adapter {
 
     const status = mapStatus(rawState, telemetry);
     status.online = Boolean(telemetryNode.online);
-    status.updated_at = telemetryNode.updatedAt ? String(telemetryNode.updatedAt) : "";
     status.cloud_error = telemetryNode.error ? String(telemetryNode.error) : "";
 
     await this.setStateChangedAsync(`${device.slug}.connected`, { val: Boolean(telemetryNode.online), ack: true });
+    await this.setStateChangedAsync(`${device.slug}.cloud_error`, { val: status.cloud_error, ack: true });
 
     const lastUpdateTs = parseTimestamp(telemetryNode.updatedAt);
     if (lastUpdateTs !== undefined) {
