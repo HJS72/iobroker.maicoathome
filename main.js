@@ -107,6 +107,7 @@ const REMOTE_STATES = {
     min: 10,
     max: 35
   },
+  device_filter_interval: { type: "number", role: "level", unit: "months", name: "Geraetefilter Intervall", min: 1, max: 24 },
   device_filter_changed: { type: "boolean", role: "button", name: "Geraetefilter gewechselt" },
   outside_filter_changed: { type: "boolean", role: "button", name: "Aussenfilter gewechselt" },
   room_filter_changed: { type: "boolean", role: "button", name: "Raumfilter gewechselt" }
@@ -117,6 +118,7 @@ const CLOUD_PARAM_MAP = {
   operating_mode: 530,
   fan_level: 105,
   target_room_temperature: 610,
+  device_filter_interval: 150,
   device_filter_changed: 157,
   outside_filter_changed: 158,
   room_filter_changed: 159
@@ -513,6 +515,12 @@ class MaicoAtHome extends utils.Adapter {
     if (status.target_room_temperature !== undefined) {
       await this.setStateChangedAsync(`${device.slug}.Remote.target_room_temperature`, {
         val: status.target_room_temperature,
+        ack: true
+      });
+    }
+    if (status.device_filter_interval !== undefined) {
+      await this.setStateChangedAsync(`${device.slug}.Remote.device_filter_interval`, {
+        val: status.device_filter_interval,
         ack: true
       });
     }
