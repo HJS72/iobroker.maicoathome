@@ -2,6 +2,7 @@
 # ioBroker MAICO@HOME Adapter
 
 Liest Statuswerte aus der MAICO@HOME Cloud und stellt steuerbare Remote-Datenpunkte in ioBroker bereit.
+Getestet mit MAICO@HOME App und WS75 Wohnraumlüfter.
 
 ## Datenpunktstruktur
 
@@ -24,9 +25,6 @@ Beispiel:
 - `operating_mode`
 - `fan_level`
 - `target_room_temperature`
-- `device_filter_changed`
-- `outside_filter_changed`
-- `room_filter_changed`
 
 ## Hinweis
 
