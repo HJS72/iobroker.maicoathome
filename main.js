@@ -75,8 +75,9 @@ const STATUS_STATES = {
       0: "Aus",
       1: "Manuell",
       2: "Auto-Sensor",
-      3: "Eco-Zuluft",
-      4: "Eco-Abluft"
+      3: "Auto-Sensor (not used)",
+      4: "Eco-Zuluft",
+      5: "Eco-Abluft"
     }
   },
   fan_level_current: {
@@ -138,8 +139,9 @@ const REMOTE_STATES = {
       0: "Aus",
       1: "Manuell",
       2: "Auto-Sensor",
-      3: "Eco-Zuluft",
-      4: "Eco-Abluft"
+      3: "Auto-Sensor (not used)",
+      4: "Eco-Zuluft",
+      5: "Eco-Abluft"
     }
   },
   fan_level: {
