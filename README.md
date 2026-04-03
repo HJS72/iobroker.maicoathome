@@ -1,3 +1,6 @@
+![Logo](admin/maicoathome.png)
+# ioBroker.maicoathome
+
 # ioBroker MAICO@HOME Adapter
 
 Liest Statuswerte aus der MAICO@HOME Cloud und stellt steuerbare Remote-Datenpunkte in ioBroker bereit.
