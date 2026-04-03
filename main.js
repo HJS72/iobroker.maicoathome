@@ -67,8 +67,30 @@ mutation RequestData($uuid: String!) {
 
 // Read-only ioBroker states populated from cloud state + telemetry.
 const STATUS_STATES = {
-  operating_mode: { type: "number", role: "value", name: "Betriebsart" },
-  fan_level_current: { type: "number", role: "value", name: "Lueftungsstufe" },
+  operating_mode: {
+    type: "number",
+    role: "value",
+    name: "Betriebsart",
+    states: {
+      0: "Aus",
+      1: "Manuell",
+      2: "Auto-Sensor",
+      3: "Eco-Zuluft",
+      4: "Eco-Abluft"
+    }
+  },
+  fan_level_current: {
+    type: "number",
+    role: "value",
+    name: "Lueftungsstufe",
+    states: {
+      0: "Aus",
+      1: "Feuchteschutz",
+      2: "Reduziert",
+      3: "Nenn",
+      4: "Intensiv"
+    }
+  },
   room_temperature: { type: "number", role: "value.temperature", unit: "°C", name: "Temp Raum" },
   inlet_air_temperature: { type: "number", role: "value.temperature", unit: "°C", name: "Temp Lufteintritt" },
   target_room_temperature: { type: "number", role: "value.temperature", unit: "°C", name: "Solltemperatur" },
@@ -81,9 +103,6 @@ const STATUS_STATES = {
   device_filter_remaining: { type: "number", role: "value", unit: "days", name: "Geraetefilter Rest" },
   outside_filter_remaining: { type: "number", role: "value", unit: "days", name: "Aussenfilter Rest" },
   room_filter_remaining: { type: "number", role: "value", unit: "days", name: "Raumfilter Rest" },
-  device_filter_interval: { type: "number", role: "value", unit: "months", name: "Geraetefilter Intervall" },
-  outside_filter_interval: { type: "number", role: "value", unit: "months", name: "Aussenfilter Intervall" },
-  room_filter_interval: { type: "number", role: "value", unit: "months", name: "Raumfilter Intervall" },
   online: { type: "boolean", role: "indicator.connected", name: "Online" },
   updated_at: { type: "string", role: "text", name: "Telemetry Updated At" },
   cloud_error: { type: "string", role: "text", name: "Cloud Fehler" }
@@ -101,10 +120,42 @@ const LEGACY_FILTER_CHANGED_STATES = [
   "room_filter_changed"
 ];
 
+const LEGACY_FILTER_INTERVAL_STATES = [
+  "device_filter_interval",
+  "outside_filter_interval",
+  "room_filter_interval"
+];
+
 // Writable ioBroker states mapped to cloud parameter writes.
 const REMOTE_STATES = {
-  operating_mode: { type: "number", role: "level", name: "Betriebsart", min: 0, max: 5 },
-  fan_level: { type: "number", role: "level", name: "Lueftungsstufe", min: 0, max: 4 },
+  operating_mode: {
+    type: "number",
+    role: "level",
+    name: "Betriebsart",
+    min: 0,
+    max: 5,
+    states: {
+      0: "Aus",
+      1: "Manuell",
+      2: "Auto-Sensor",
+      3: "Eco-Zuluft",
+      4: "Eco-Abluft"
+    }
+  },
+  fan_level: {
+    type: "number",
+    role: "level",
+    name: "Lueftungsstufe",
+    min: 0,
+    max: 4,
+    states: {
+      0: "Aus",
+      1: "Feuchteschutz",
+      2: "Reduziert",
+      3: "Nenn",
+      4: "Intensiv"
+    }
+  },
   target_room_temperature: {
     type: "number",
     role: "level.temperature",
@@ -434,7 +485,8 @@ class MaicoAtHome extends utils.Adapter {
             role: meta.role,
             read: true,
             write: false,
-            unit: meta.unit
+            unit: meta.unit,
+            states: meta.states
           },
           native: {}
         });
@@ -451,15 +503,47 @@ class MaicoAtHome extends utils.Adapter {
             write: true,
             unit: meta.unit,
             min: meta.min,
-            max: meta.max
+            max: meta.max,
+            states: meta.states
           },
           native: {}
         });
       }
 
+      // Apply states mapping updates to existing fan-level objects.
+      await this.extendObjectAsync(`${d.slug}.Status.operating_mode`, {
+        common: {
+          states: STATUS_STATES.operating_mode.states
+        }
+      });
+      await this.extendObjectAsync(`${d.slug}.Remote.operating_mode`, {
+        common: {
+          states: REMOTE_STATES.operating_mode.states
+        }
+      });
+      await this.extendObjectAsync(`${d.slug}.Status.fan_level_current`, {
+        common: {
+          states: STATUS_STATES.fan_level_current.states
+        }
+      });
+      await this.extendObjectAsync(`${d.slug}.Remote.fan_level`, {
+        common: {
+          states: REMOTE_STATES.fan_level.states
+        }
+      });
+
       // Remove legacy filter-changed controls from existing installations.
       for (const id of LEGACY_FILTER_CHANGED_STATES) {
         const fullId = `${d.slug}.Remote.${id}`;
+        const obj = await this.getObjectAsync(fullId);
+        if (obj) {
+          await this.delObjectAsync(fullId);
+        }
+      }
+
+      // Remove legacy filter-interval status states from existing installations.
+      for (const id of LEGACY_FILTER_INTERVAL_STATES) {
+        const fullId = `${d.slug}.Status.${id}`;
         const obj = await this.getObjectAsync(fullId);
         if (obj) {
           await this.delObjectAsync(fullId);
@@ -665,9 +749,6 @@ function mapStatus(params, telemetry) {
   out.target_room_temperature = num(params.p610);
   out.humidity_min = intNum(params.p647);
   out.humidity_max = intNum(params.p648);
-  out.device_filter_interval = intNum(params.p150);
-  out.outside_filter_interval = intNum(params.p151);
-  out.room_filter_interval = intNum(params.p152);
 
   if (params.p500 !== undefined && params.p500 !== null && params.p500 !== "") {
     out.operating_mode = intNum(params.p500);
