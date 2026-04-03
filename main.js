@@ -295,18 +295,34 @@ class MaicoAtHome extends utils.Adapter {
       await this.login();
     }
 
-    const res = await fetch(String(this.config.baseUrl || "").trim(), {
-      method: "POST",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "App-Version": String(this.config.appVersion || "1.4.4"),
-        "Authorization": `Bearer ${this.token}`
-      },
-      body: JSON.stringify({ query, variables })
-    });
+    const doFetch = async () =>
+      fetch(String(this.config.baseUrl || "").trim(), {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "App-Version": String(this.config.appVersion || "1.4.4"),
+          "Authorization": `Bearer ${this.token}`
+        },
+        body: JSON.stringify({ query, variables })
+      });
 
-    const json = await res.json();
+    let res = await doFetch();
+
+    if (res.status === 401) {
+      this.log.debug("Token expired, re-authenticating...");
+      this.token = null;
+      await this.login();
+      res = await doFetch();
+    }
+
+    const text = await res.text();
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      throw new Error(`Non-JSON response (HTTP ${res.status}): ${text.slice(0, 200)}`);
+    }
 
     if (json && Array.isArray(json.errors) && json.errors.length) {
       const msg = json.errors.map((e) => e.message || String(e)).join("; ");
