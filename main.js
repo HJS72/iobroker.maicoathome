@@ -95,6 +95,12 @@ const DEVICE_STATES = {
   lastupdate: { type: "number", role: "value.time", name: "Last Update" }
 };
 
+const LEGACY_FILTER_CHANGED_STATES = [
+  "device_filter_changed",
+  "outside_filter_changed",
+  "room_filter_changed"
+];
+
 // Writable ioBroker states mapped to cloud parameter writes.
 const REMOTE_STATES = {
   operating_mode: { type: "number", role: "level", name: "Betriebsart", min: 0, max: 5 },
@@ -106,20 +112,14 @@ const REMOTE_STATES = {
     name: "Solltemperatur",
     min: 10,
     max: 35
-  },
-  device_filter_changed: { type: "boolean", role: "button", name: "Geraetefilter gewechselt" },
-  outside_filter_changed: { type: "boolean", role: "button", name: "Aussenfilter gewechselt" },
-  room_filter_changed: { type: "boolean", role: "button", name: "Raumfilter gewechselt" }
+  }
 };
 
 // Maps writable ioBroker states to the cloud parameter numbers used by MAICO.
 const CLOUD_PARAM_MAP = {
   operating_mode: 530,
   fan_level: 105,
-  target_room_temperature: 610,
-  device_filter_changed: 157,
-  outside_filter_changed: 158,
-  room_filter_changed: 159
+  target_room_temperature: 610
 };
 
 // Operating mode writes use the p530 encoding, which differs from the exposed UI values.
@@ -456,6 +456,15 @@ class MaicoAtHome extends utils.Adapter {
           native: {}
         });
       }
+
+      // Remove legacy filter-changed controls from existing installations.
+      for (const id of LEGACY_FILTER_CHANGED_STATES) {
+        const fullId = `${d.slug}.Remote.${id}`;
+        const obj = await this.getObjectAsync(fullId);
+        if (obj) {
+          await this.delObjectAsync(fullId);
+        }
+      }
     }
   }
 
@@ -543,8 +552,6 @@ class MaicoAtHome extends utils.Adapter {
       valueToSend = MODE_TO_P530[mode] !== undefined ? MODE_TO_P530[mode] : mode;
     } else if (key === "target_room_temperature") {
       valueToSend = String(Number(rawValue));
-    } else if (key.endsWith("_changed")) {
-      valueToSend = rawValue === true || rawValue === 1 || rawValue === "1" ? 1 : 0;
     } else {
       valueToSend = Number(rawValue);
     }
@@ -598,7 +605,7 @@ class MaicoAtHome extends utils.Adapter {
       await this.setObjectAsync(id, obj);
     }
 
-    this.log.warn(`Remote state ${id} is not supported by this device (PARAMETER_UNKNOWN). Writes were disabled.`);
+    this.log.info(`Remote state ${id} is not supported by this device (PARAMETER_UNKNOWN). Writes were disabled.`);
   }
 
   /**
